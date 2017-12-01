@@ -70,6 +70,8 @@
                 this._vertShader = gl.createShader(gl.VERTEX_SHADER);
                 this._fragShader = gl.createShader(gl.FRAGMENT_SHADER);
 
+                this._shaderProg = gl.createProgram();
+
                 // get and send the text of the respective elements
                 var vertShaderElement = document.getElementById(vertId);
                 if(!vertShaderElement) {
@@ -101,6 +103,28 @@
                     alert(gl.getShaderInfoLog(this._fragShader));
                     return;
                 }
+
+                // attach the vertex and fragment shaders to the total program
+                gl.attachShader(this._shaderProg, this._vertShader);
+                gl.attachShader(this._shaderProg, this._fragShader);
+                gl.linkProgram(this._shaderProg);
+
+                // verify its all good again
+                if(!gl.getProgramParameter(this._shaderProg, gl.LINK_STATUS)) {
+                    alert('Failed to link shader program!');
+                }
+
+                this.use(gl);
+
+                this._shaderProg.vertexPositionAttribute = gl.getAttribLocation(this._shaderProg, "aVertexPosition");
+                gl.enableVertexAttribArray(this._shaderProg.vertexPositionAttribute);
+
+                this._shaderProg.pMatrixUniform = gl.getUniformLocation(this._shaderProg, "uPMatrix");
+                this._shaderProg.mvMatrixUniform = gl.getUniformLocation(this._shaderProg, "uMVMatrix");
+            }
+
+            use(gl) {
+                gl.useProgram(this._shaderProg);
             }
         }
 
