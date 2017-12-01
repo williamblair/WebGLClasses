@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>WebGL Class Test</title>
+
+    <style>
+        #canvasContainer {
+            width: 640px;
+            height: 480px;
+            overflow: hidden;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvasContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+
+        class Display {
+            
+            // constructor
+            constructor(canvasIdStr) {
+                // get the canvas
+                this._canvas = document.getElementById(canvasIdStr);
+                if(!this._canvas){
+                    alert('Display constructor: failed to load canvas!');
+                }
+
+                // get the WebGL context
+                this._gl = this._canvas.getContext("experimental-webgl");
+                if(!this._gl){
+                    alert('Display constructor: failed to initialize WebGL!');
+                }
+                this._gl.viewportWidth  = this.canvas.width;
+                this._gl.viewportHeight = this.canvas.height;
+
+                // enable the z buffer
+                this._gl.enable(this._gl.DEPTH_TEST);
+            }
+
+            // clears the buffer bits and sets the viewport width
+            clear() {
+                this._gl.viewport(0, 0, this._gl.viewportWidth, this._gl.viewportHeight);
+                this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
+            }
+
+            // getter functions
+            get canvas() {
+                return this._canvas;
+            }
+            get glContext() {
+                return this._gl;
+            }
+        }
+
+        var display = new Display("myCanvas");
+        
+        // set the bg color
+        display.glContext.clearColor(0.0, 0.3, 0.3, 1.0);
+
+        display.clear();
+    </script>
+
+</body>
+</html>
