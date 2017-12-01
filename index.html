@@ -25,7 +25,84 @@
         <canvas id="myCanvas"></canvas>
     </div>
 
+    <!-- fragment and vertex shader used -->
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+    
+        void main(void) {
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    </script>
+    
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        }
+    </script>
+
     <script>
+
+        // Used in Shader constructor to get the vertex and fragment shader text
+        var getElementText = function(el) {
+            var str = "";
+            var k = el.firstChild;
+            while(k) {
+                if(k.nodeType == 3) {
+                    str += k.textContent;
+                }
+                k = k.nextSibling;
+            }
+
+            return str;
+        }
+
+        // the global move matrix
+        var mvMatrix = mat4.create();
+
+        class Shader {
+            // vertId and fragId are the html elements containing the vertex and fragment shader code
+            constructor(gl, vertId, fragId) {
+                this._vertShader = gl.createShader(gl.VERTEX_SHADER);
+                this._fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+
+                // get and send the text of the respective elements
+                var vertShaderElement = document.getElementById(vertId);
+                if(!vertShaderElement) {
+                    alert('Failed to find vertex shader element with id: ', vertId);
+                    return;
+                }
+                var fragShaderElement = document.getElementById(fragId);
+                if(!fragShaderElement) {
+                    alert('Failed to find fragment shader element with id: ', fragId);
+                    return;
+                }
+
+                var vertStr = getElementText(vertShaderElement);
+                var fragStr = getElementText(fragShaderElement);
+
+                // compile the text of each element
+                gl.shaderSource(this._vertShader, vertStr);
+                gl.compileShader(this._vertShader);
+
+                gl.shaderSource(this._fragShader, fragStr);
+                gl.compileShader(this._fragShader);
+
+                // verify its all good
+                if(!gl.getShaderParameter(this._vertShader, gl.COMPILE_STATUS)) {
+                    alert(gl.getShaderInfoLog(this._vertShader));
+                    return;
+                }
+                if(!gl.getShaderParameter(this._fragShader, gl.COMPILE_STATUS)) {
+                    alert(gl.getShaderInfoLog(this._fragShader));
+                    return;
+                }
+            }
+        }
 
         class Display {
             
@@ -79,9 +156,6 @@
             }
         }
 
-        // the global move matrix
-        var mvMatrix = mat4.create();
-
         class Object {
             constructor(pos) {
                 // vec3 representing the object's position
@@ -92,7 +166,8 @@
             }
 
             // draw the object
-            draw(gl, shaderID) {
+            // mvMatrix is global and pMatrix is stored in camera
+            draw(gl, shaderID, pMatrix, mvMatrix) {
                 // move to where we're drawing
                 mat4.translate(mvMatrix, this._pos);
 
@@ -106,8 +181,9 @@
                     0, 0
                 );
 
-                // TODO - implement me!
-                //setMatrixUniforms();
+                gl.uniformMatrix4fv(shaderID.pMatrixUniform, false, pMatrix);
+                gl.uniformMatrix4fv(shaderID.mvMatrixUniform, false, mvMatrix);
+
                 gl.drawArrays(gl.TRIANGLES, 0, this._VBO.numItems);
             }
             
@@ -115,6 +191,7 @@
 
         var display = new Display("myCanvas");
         var camera = new Camera([0.0, 0.0, 0.0]); // pos at 0.0
+        var shader = new Shader(display.glContext, "shader-vs", "shader-fs");
         
         // set the bg color and clear the canvas
         display.glContext.clearColor(0.0, 0.3, 0.3, 1.0);
