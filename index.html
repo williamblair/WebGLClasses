@@ -3,6 +3,8 @@
 <head>
     <title>WebGL Class Test</title>
 
+    <script src="glMatrix-0.9.5.min.js"></script>
+
     <style>
         #canvasContainer {
             width: 640px;
@@ -62,12 +64,66 @@
             }
         }
 
-        var display = new Display("myCanvas");
-        
-        // set the bg color
-        display.glContext.clearColor(0.0, 0.3, 0.3, 1.0);
+        class Camera {
+            constructor(pos) {
+                // vec3 representing the camera's position
+                this._pos = pos;
 
+                // initialize the projection matrix
+                this._projMat = mat4.create();
+            }
+
+            // set the camera's projection matrix
+            perspective(gl) {
+                mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, this._projMat);
+            }
+        }
+
+        // the global move matrix
+        var mvMatrix = mat4.create();
+
+        class Object {
+            constructor(pos) {
+                // vec3 representing the object's position
+                this._pos = pos;
+
+                // position buffer
+                this._VBO = 0;
+            }
+
+            // draw the object
+            draw(gl, shaderID) {
+                // move to where we're drawing
+                mat4.translate(mvMatrix, this._pos);
+
+                // bind draw the object
+                gl.bindBuffer(gl.ARRAY_BUFFER, this._VBO);
+                gl.vertexAttribPointer(
+                    shaderID.vertexPositionAttribute,
+                    this._VBO.itemSize,
+                    gl.FLOAT,
+                    false,
+                    0, 0
+                );
+
+                // TODO - implement me!
+                //setMatrixUniforms();
+                gl.drawArrays(gl.TRIANGLES, 0, this._VBO.numItems);
+            }
+            
+        }
+
+        var display = new Display("myCanvas");
+        var camera = new Camera([0.0, 0.0, 0.0]); // pos at 0.0
+        
+        // set the bg color and clear the canvas
+        display.glContext.clearColor(0.0, 0.3, 0.3, 1.0);
         display.clear();
+
+        // set the opengl projection matrix
+        camera.perspective(display.glContext);
+
+
     </script>
 
 </body>
