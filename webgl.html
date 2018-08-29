@@ -26,6 +26,7 @@
 
 <script src="Shader.js"></script>
 <script src="Texture.js"></script>
+<script src="glObject.js"></script>
 <script>
 
 var canvas = document.getElementById('myCanvas');
@@ -85,10 +86,13 @@ var myProgram = {
   
   initBuffers: function() {
   
-    this.cubeVertexBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeVertices), 3, 24);
-    this.cubeElementBuffer = utils.createBuffer(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.cubeIndices), 1, 36);
-    this.cubeColorBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeColors), 3, 24);
+    //this.cubeVertexBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeVertices), 3, 24);
+    //this.cubeElementBuffer = utils.createBuffer(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.cubeIndices), 1, 36);
+    //this.cubeColorBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeColors), 3, 24);
     
+    this.cubeObj = new glObject(this.cubeVertices, 3, 24);
+    this.cubeObj.createElementBuffer(this.cubeIndices, 1, 36);
+    //this.cubeObj.createColorBuffer(this.cubeColors, )
   },
   
   createShader: function() {
@@ -152,20 +156,21 @@ modelViewPopMatrix: function() {
     
     mat4.rotate(this.modelViewMatrix, utils.degreesToRadians(this.squareRotate), [1,1,0.5]);
     
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVertexBuffer);
-    gl.vertexAttribPointer(this.shaderProgram.vertexAttrib, this.cubeVertexBuffer.itemSize, gl.FLOAT, false, 0,0);
-    
+    //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVertexBuffer);
+    //gl.vertexAttribPointer(this.shaderProgram.vertexAttrib, this.cubeVertexBuffer.itemSize, gl.FLOAT, false, 0,0);
+    this.cubeObj.bind(this.shaderProgram);
     
     this.cubeTexture.use(this.shaderProgram.texCoordAttrib);
 
     gl.uniform1i(this.shaderProgram.samplerUniform, 0);
     
       
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeElementBuffer);
+    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeElementBuffer);
     
     this.setUniforms();
 
-    gl.drawElements(gl.TRIANGLES, this.cubeElementBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    //gl.drawElements(gl.TRIANGLES, this.cubeElementBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    this.cubeObj.draw();
     this.modelViewPopMatrix();
   },
   
