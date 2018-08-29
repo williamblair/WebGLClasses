@@ -85,14 +85,10 @@ var utils = {
 var myProgram = {
   
   initBuffers: function() {
-  
-    //this.cubeVertexBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeVertices), 3, 24);
-    //this.cubeElementBuffer = utils.createBuffer(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.cubeIndices), 1, 36);
-    //this.cubeColorBuffer = utils.createBuffer(gl.ARRAY_BUFFER, new Float32Array(this.cubeColors), 3, 24);
-    
+
     this.cubeObj = new glObject(this.cubeVertices, 3, 24);
     this.cubeObj.createElementBuffer(this.cubeIndices, 1, 36);
-    //this.cubeObj.createColorBuffer(this.cubeColors, )
+
   },
   
   createShader: function() {
@@ -109,7 +105,9 @@ var myProgram = {
   },
   
   setUniformLocations: function() {
-                           
+    
+    /* These values aren't acutally being set as strings, rather they
+     * are being used to call the Shader class's set method */
     this.shaderProgram.projMatUniform = "uProjectionMatrix";
     this.shaderProgram.modelViewMatUniform = "uModelViewMatrix";
     this.shaderProgram.samplerUniform = "uSampler";
@@ -133,7 +131,7 @@ var myProgram = {
     this.modelViewMatrixStack.push(copy);
   },
   
-modelViewPopMatrix: function() {
+  modelViewPopMatrix: function() {
     if (this.modelViewMatrixStack.length == 0) {
       throw "Invalid pop matrix!";
     }
@@ -151,26 +149,19 @@ modelViewPopMatrix: function() {
     /************************** DRAW CUBE ********************************************/
 
     mat4.translate(this.modelViewMatrix, [0.0, 0.0, -7.0]);
-    
     this.modelViewPushMatrix();
     
-    mat4.rotate(this.modelViewMatrix, utils.degreesToRadians(this.squareRotate), [1,1,0.5]);
-    
-    //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVertexBuffer);
-    //gl.vertexAttribPointer(this.shaderProgram.vertexAttrib, this.cubeVertexBuffer.itemSize, gl.FLOAT, false, 0,0);
-    this.cubeObj.bind(this.shaderProgram);
-    
-    this.cubeTexture.use(this.shaderProgram.texCoordAttrib);
-
-    gl.uniform1i(this.shaderProgram.samplerUniform, 0);
-    
+      mat4.rotate(this.modelViewMatrix, utils.degreesToRadians(this.squareRotate), [1,1,0.5]);
       
-    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeElementBuffer);
-    
-    this.setUniforms();
+      this.cubeObj.bind(this.shaderProgram);
 
-    //gl.drawElements(gl.TRIANGLES, this.cubeElementBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-    this.cubeObj.draw();
+      this.cubeTexture.use(this.shaderProgram.texCoordAttrib);
+
+      gl.uniform1i(this.shaderProgram.samplerUniform, 0);
+      this.setUniforms();
+
+      this.cubeObj.draw();
+
     this.modelViewPopMatrix();
   },
   
