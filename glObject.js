@@ -18,6 +18,12 @@ class glObject
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(shader.vertexAttrib, this.vertexBuffer.itemSize, gl.FLOAT, false, 0,0);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.elementBuffer);
+
+        if (this.texture !== undefined) {
+            this.texture.use(shader.texCoordAttrib);
+            gl.uniform1i(shader.samplerUniform, 0);
+        }
+        
     }
 
     /*
@@ -61,6 +67,13 @@ class glObject
         buffer.numItems = numItems;
 
         return buffer;
+    }
+
+    /*
+     * Send a texture object for us to use
+     */
+    addTexture(texture) {
+        this.texture = texture;
     }
 };
 
