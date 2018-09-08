@@ -24,6 +24,9 @@
 <canvas id="myCanvas"></canvas>
 <img id="neheTexture" src="nehe.gif" width="0" height="0" onload="run()"/>
 
+<p>Up/Down/Left/Right: rotate</p>
+<p>w/a/s/d: move camera</p>
+
 <script src="Shader.js"></script>
 <script src="Texture.js"></script>
 <script src="glObject.js"></script>
@@ -32,13 +35,14 @@
 var canvas = document.getElementById('myCanvas');
 var gl = canvas.getContext('experimental-webgl');
 gl.canvas.width = window.innerWidth;
-gl.canvas.height = window.innerHeight;
+gl.canvas.height = 3*window.innerHeight / 4;
 
 var frameCount = 0; // to record fps
 var lastTime = new Date().getTime();
 var elapsedTime = 0;
 
 var cubeRot = [0,0,0];
+var cameraPos = [0,0,0];
 
 var vertexShaderCode = `attribute vec3 aVertexPosition;
                         attribute vec2 aTextureCoord;
@@ -129,6 +133,9 @@ var myProgram = {
     
     mat4.identity(this.modelViewMatrix);
     
+    /* Move to where the camera is */
+    mat4.translate(this.modelViewMatrix, cameraPos);
+
     /************************** DRAW CUBE ********************************************/
     this.modelViewPushMatrix();
     
@@ -143,19 +150,42 @@ var myProgram = {
   handleKeyDown: function(event) {
     const rotSpeed = 5;
     
+    console.log('keycode: ', event.keyCode);
+
     switch(event.keyCode)
     {
+      // up
       case 38:
         cubeRot[0] -= rotSpeed;
         break;
+      // down
       case 40:
         cubeRot[0] += rotSpeed;
         break;
+      // left
       case 37:
         cubeRot[1] -= rotSpeed;
         break;
+      // right
       case 39:
         cubeRot[1] += rotSpeed;
+        break;
+      // w
+      case 87:
+        cameraPos[2] += 0.1;
+        break;
+      // s
+      case 83:
+        cameraPos[2] -= 0.1;
+        break;
+      // a
+      case 65:
+        cameraPos[0] += 0.1;
+        break;
+      // d
+      case 68:
+        cameraPos[0] -= 0.1;
+        break;
       default:
         break;
     }
@@ -305,7 +335,7 @@ var myProgram = {
     0.0, 1.0
   ],
   
-  quit: false,
+  quit: false
   
 };
 
