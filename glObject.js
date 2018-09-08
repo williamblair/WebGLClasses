@@ -14,7 +14,7 @@ class glObject
     /* 
      * Bind the buffers for drawing
      */
-    bind(shader) {
+    bind(shader, modelViewMatrix) {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(shader.vertexAttrib, this.vertexBuffer.itemSize, gl.FLOAT, false, 0,0);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.elementBuffer);
@@ -23,13 +23,19 @@ class glObject
             this.texture.use(shader.texCoordAttrib);
             gl.uniform1i(shader.samplerUniform, 0);
         }
+
+        if (this._rotation !== undefined) {
+            mat4.rotate(modelViewMatrix, this._rotation[0] * Math.PI / 180, [1, 0, 0]);
+            mat4.rotate(modelViewMatrix, this._rotation[1] * Math.PI / 180, [0, 1, 0]);
+            mat4.rotate(modelViewMatrix, this._rotation[2] * Math.PI / 180, [0, 0, 1]);
+        }
         
     }
 
     /*
      * Draw either elements or arrays depending on what was given
      */
-    draw() {
+    draw(shader) {
 
         if (this.elementBuffer !== undefined) {
             gl.drawElements(gl.TRIANGLES, this.elementBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -74,6 +80,34 @@ class glObject
      */
     addTexture(texture) {
         this.texture = texture;
+    }
+
+    /*
+     * Set a rotation vector
+     */
+    set rotation(rot) {
+        this._rotation = rot;
+    }
+
+    /*
+     * Get the rotation vector 
+     */
+    get rotation() {
+        return this._rotation;
+    }
+
+    /*
+     * Set a position vector
+     */
+    set position(pos) {
+        this._position = pos;
+    }
+
+    /*
+     * Get the position vector 
+     */
+    get position() {
+        return this._position;
     }
 };
 
