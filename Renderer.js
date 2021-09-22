@@ -31,6 +31,14 @@ class Renderer {
             this.clearColor[2],
             1.0
         );
+        const aspect = (1.0*this.canvas.width) / (1.0*this.canvas.height);
+        const fovDegrees = 45.0;
+        this.perspectiveMatrix = mat4.perspective(
+            fovDegrees,
+            aspect,
+            1.0,
+            1000.0
+        );
     }
 
     /**

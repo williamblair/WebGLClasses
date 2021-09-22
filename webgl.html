@@ -33,6 +33,10 @@
 <div id="fpsDiv" style="position: absolute; top: 10px; left: 10px; color:white; background-color:blue;">
   <span id="fpsSpan">FPS</span>
 </div>
+<div id="fovSliderDiv" style="position: absolute; top: 50px; left: 10px;">
+  <input id="fovSlider" type="range" min="10.0" max="90.0" value="45.0" class="slider" onchange="handleFovSlider(this.value)"/>
+  <label for="fovSlider" id="fovLabel">FOV: 45.0</label>
+</div>
 
 <div id="canvasDiv">
 <canvas id="myCanvas"></canvas>
@@ -73,17 +77,46 @@ function main() {
     );
     shader.Use();
 
+    shader.SetMatrixUniform(
+        Shader.PERSPECTIVE_MAT_UNIFORM,
+        render.perspectiveMatrix
+    );
+    var identMat = mat4.create();
+    mat4.identity( identMat );
+    shader.SetMatrixUniform(
+        Shader.VIEW_MAT_UNIFORM,
+        identMat
+    );
+    shader.SetMatrixUniform(
+        Shader.MODEL_MAT_UNIFORM,
+        identMat
+    );
+
     testTriangleMesh = new Mesh(
         render.gl,
-        [ -0.5, -0.5, 0.0,
-            0.5, -0.5, 0.0,
-            0.0, 0.5, 0.0
+        [ -0.5, -0.5, -5.0,
+            0.5, -0.5, -5.0,
+            0.0, 0.5, -5.0
         ],
         3, // elements per vertex
         null
     );
 
     mainLoop();
+}
+
+function handleFovSlider(fovDegrees) {
+    render.perspectiveMatrix = mat4.perspective(
+        fovDegrees,
+        render.canvas.width / render.canvas.height,
+        1.0,
+        1000.0
+    );
+    shader.SetMatrixUniform(
+        Shader.PERSPECTIVE_MAT_UNIFORM,
+        render.perspectiveMatrix
+    );
+    document.getElementById("fovLabel").innerHTML = "FOV: " + fovDegrees;
 }
 </script>
 
@@ -92,8 +125,15 @@ layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoord;
 
+uniform mat4 uPerspectiveMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uModelMatrix;
+
 void main() {
-    gl_Position = vec4(aPosition, 1.0);
+    gl_Position = uPerspectiveMatrix *
+                  uViewMatrix *
+                  uModelMatrix *
+                  vec4(aPosition, 1.0);
 }
 </script>
 

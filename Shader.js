@@ -34,6 +34,15 @@ class Shader
         this.gl.useProgram(this.shaderProgram);
     }
     
+    SetMatrixUniform(name, mat) {
+        const loc = this.gl.getUniformLocation(this.shaderProgram, name);
+        if (!loc) {
+            Debug.Log("Shader SetMatrixUniform: failed to get location for: " + name);
+            return;
+        }
+
+        this.gl.uniformMatrix4fv(loc, false, mat);
+    }
 
     createShader(shaderType, source) {
         var shader = this.gl.createShader(shaderType);
@@ -48,8 +57,12 @@ class Shader
         return shader;
     }
 
+
 };
 
-
+// constants
+Shader.PERSPECTIVE_MAT_UNIFORM = "uPerspectiveMatrix";
+Shader.VIEW_MAT_UNIFORM = "uViewMatrix";
+Shader.MODEL_MAT_UNIFORM = "uModelMatrix";
 
 
