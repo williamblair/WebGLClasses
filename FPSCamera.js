@@ -21,6 +21,10 @@ class FPSCamera {
 
         this.forwardSpeed = 0.0;
         this.strafeSpeed = 0.0;
+
+        this.keyboardInputActive = true;
+        this.cameraRotate = false;
+        this.setKeyboardInput();
     }
 
     /**
@@ -28,6 +32,10 @@ class FPSCamera {
         @param [dt] delta frame time in seconds
     */
     Update(dt) {
+
+        if (!this.keyboardInputActive) {
+            return;
+        }
 
         if (Math.abs(this.forwardSpeed) > 0.0001 ||
             Math.abs(this.strafeSpeed) > 0.0001) {
@@ -86,5 +94,82 @@ class FPSCamera {
         vec3.scale(tmpRight, strafeAmount, tmpRight);
         vec3.add(this.position, tmpRight, this.position);
     }
+
+    setKeyboardInput() {
+        var thisObj = this;
+        document.onkeydown = function(e) {
+            if (!thisObj.keyboardInputActive) {
+                return;
+            }
+            //console.log('Keydown code: ', e.keyCode);
+            switch (e.keyCode) {
+                // w 
+                case 87:
+                    thisObj.forwardSpeed = 1.0;
+                    break;
+                // a
+                case 65:
+                    thisObj.strafeSpeed = -1.0;
+                    break;
+                // s
+                case 83:
+                    thisObj.forwardSpeed = -1.0;
+                    break;
+                // d
+                case 68:
+                    thisObj.strafeSpeed = 1.0;
+                    break;
+                default:
+                    break;
+            }
+        }    
+        document.onkeyup = function(e) {
+            //console.log('Keyup code: ', e.keyCode);
+            switch (e.keyCode) {
+                // w
+                case 87:
+                    camera.forwardSpeed = 0.0;
+                    break;
+                // a
+                case 65:
+                    camera.strafeSpeed = 0.0;
+                    break;
+                // s
+                case 83:
+                    camera.forwardSpeed = 0.0;
+                    break;
+                // d
+                case 68:
+                    camera.strafeSpeed = 0.0;
+                    break;
+                default:
+                    break;
+            }
+        }
+        document.onmousemove = function(e) {
+            //console.log('movementX, movementY: ', e.movementX, e.movementY);
+            if (thisObj.cameraRotate) {
+                const rate = 0.001;
+                var pitch = -e.movementY * rate;
+                var yaw = -e.movementX * rate;
+                camera.pitch += pitch;
+                camera.yaw += yaw;
+            } 
+        }
+        document.onmousedown = function(e) {
+            //console.log('mousedown button: ', e.button);
+            // left mouse click
+            if (e.button == 0) {
+                thisObj.cameraRotate = true;
+            }
+        }
+        document.onmouseup = function(e) {
+            //console.log('mouseup button: ', e.button);
+            if (e.button == 0) {
+                thisObj.cameraRotate = false;
+            }
+        }
+    }
+
 }
 
