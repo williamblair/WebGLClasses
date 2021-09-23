@@ -4,13 +4,15 @@ class FPSCamera {
         this.viewMatrix = mat4.create();
         mat4.identity(this.viewMatrix);
 
-        this.position = vec3.create([0.0, 0.0, 5.0]);
-        this.target = vec3.create([0.0, 0.0, 0.0]);
-        this.up = vec3.create([0.0, 1.0, 0.0]);
-        this.forward = vec3.create([0.0, 0.0, -1.0]);
-        this.right = vec3.create([1.0, 0.0, 0.0]);
+        this.position = vec3.fromValues(0.0, 0.0, 5.0);
+        this.target = vec3.fromValues(0.0, 0.0, 0.0);
+        this.up = vec3.fromValues(0.0, 1.0, 0.0);
+        this.forward = vec3.fromValues(0.0, 0.0, -1.0);
+        this.right = vec3.fromValues(1.0, 0.0, 0.0);
 
-        this.viewMatrix = mat4.lookAt(
+        this.viewMatrix = mat4.create();
+        mat4.lookAt(
+            this.viewMatrix,
             this.position,
             this.target,
             this.up
@@ -50,33 +52,35 @@ class FPSCamera {
         //this.pitch = 0.0 * Math.PI / 180.0;
         var pitchRot = mat4.create();
         mat4.identity(pitchRot);
-        mat4.rotate(pitchRot, this.pitch, vec3.create([1.0, 0.0, 0.0]));
-        mat4.multiplyVec3(pitchRot, vec3.create([0.0, 1.0, 0.0]), this.up);
-        this.up = vec3.normalize(this.up);
+        mat4.rotate(pitchRot, pitchRot, this.pitch, [1.0, 0.0, 0.0]);
+        vec3.transformMat4(this.up, [0.0, 1.0, 0.0], pitchRot);
+        vec3.normalize(this.up, this.up);
         //console.log("FPS Camera Update up: ", this.up);
 
         //this.yaw = 0.0 * Math.PI / 180.0;
         var yawRot = mat4.create();
         mat4.identity(yawRot);
-        mat4.rotate(yawRot, this.yaw, vec3.create([0.0, 1.0, 0.0]));
-        mat4.multiplyVec3(yawRot, vec3.create([1.0, 0.0, 0.0]), this.right);
-        vec3.normalize(this.right);
+        mat4.rotate(yawRot, yawRot, this.yaw, [0.0, 1.0, 0.0]);
+        vec3.transformMat4(this.right, [1.0, 0.0, 0.0], yawRot);
+        vec3.normalize(this.right, this.right);
         //console.log("FPS Camera Update right: ", this.right);
 
-        this.forward = vec3.create([0.0, 0.0, 0.0]);
-        vec3.cross(this.up, this.right, this.forward);
-        vec3.normalize(this.forward);
+        this.forward = vec3.fromValues(0.0, 0.0, 0.0);
+        vec3.cross(this.forward, this.up, this.right);
+        //vec3.normalize(this.forward);
+        vec3.normalize(this.forward, this.forward);
         //console.log("FPS Camera Update forward: ", this.forward);
         
-        vec3.add(this.position, this.forward, this.target);
+        vec3.add(this.target, this.position, this.forward);
         //console.log("FPS camera target: ", this.target);
 
         //console.log("FPS camera position: ", this.position);
 
-        this.viewMatrix = mat4.lookAt(
+        mat4.lookAt(
+            this.viewMatrix,
             this.position,
             this.target,
-            vec3.create([0.0, 1.0, 0.0])
+            [0.0, 1.0, 0.0]
         );
     }
 
@@ -86,13 +90,13 @@ class FPSCamera {
         @param [strafeAmount] amount of right/left movement (positive = right, negative = left)
     */
     Move(forwardAmount, strafeAmount) {
-        var tmpForward = vec3.create(this.forward);
-        vec3.scale(tmpForward, forwardAmount, tmpForward);
-        vec3.add(this.position, tmpForward, this.position);
+        var tmpForward = vec3.clone(this.forward);
+        vec3.scale(tmpForward, tmpForward, forwardAmount);
+        vec3.add(this.position, this.position, tmpForward);
 
-        var tmpRight = vec3.create(this.right);
-        vec3.scale(tmpRight, strafeAmount, tmpRight);
-        vec3.add(this.position, tmpRight, this.position);
+        var tmpRight = vec3.clone(this.right);
+        vec3.scale(tmpRight, tmpRight, strafeAmount);
+        vec3.add(this.position, this.position, tmpRight);
     }
 
     setKeyboardInput() {
