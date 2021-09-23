@@ -38,6 +38,15 @@
   <label for="fovSlider" id="fovLabel">FOV: 45.0</label>
 </div>
 
+<div id="pitchSliderDiv" style="position: absolute; top: 70px; left: 10px;">
+  <input id="pitchSlider" type="range" min="-45.0" max="45.0" value="0.0" class="slider" onchange="handlePitchSlider(this.value)"/>
+  <label for="pitchSlider" id="pitchLabel">Pitch: 0.0</label>
+</div>
+<div id="yawSliderDiv" style="position: absolute; top: 90px; left: 10px;">
+  <input id="yawSlider" type="range" min="-45.0" max="45.0" value="0.0" class="slider" onchange="handleYawSlider(this.value)"/>
+  <label for="yawSlider" id="yawLabel">Yaw: 0.0</label>
+</div>
+
 <div id="canvasDiv">
 <canvas id="myCanvas"></canvas>
 </div>
@@ -47,14 +56,25 @@
 <script src="./LoopTimer.js"></script>
 <script src="./Shader.js"></script>
 <script src="./Mesh.js"></script>
+<script src="./FPSCamera.js"></script>
 <script>
 // global vars
 var render = null;
 var timer = null;
 var shader = null;
 var testTriangleMesh = null;
+var camera = null;
 
 function mainLoop() {
+
+    shader.Use();
+    
+    camera.Update(timer.dt / 1000.0);
+    shader.SetMatrixUniform(
+        Shader.VIEW_MAT_UNIFORM,
+        camera.viewMatrix
+    );
+
     render.BeginFrame();
         render.DrawMesh(testTriangleMesh);
     render.EndFrame();
@@ -77,6 +97,8 @@ function main() {
     );
     shader.Use();
 
+    camera = new FPSCamera();
+
     shader.SetMatrixUniform(
         Shader.PERSPECTIVE_MAT_UNIFORM,
         render.perspectiveMatrix
@@ -84,23 +106,66 @@ function main() {
     var identMat = mat4.create();
     mat4.identity( identMat );
     shader.SetMatrixUniform(
-        Shader.VIEW_MAT_UNIFORM,
-        identMat
-    );
-    shader.SetMatrixUniform(
         Shader.MODEL_MAT_UNIFORM,
         identMat
     );
 
     testTriangleMesh = new Mesh(
         render.gl,
-        [ -0.5, -0.5, -5.0,
-            0.5, -0.5, -5.0,
-            0.0, 0.5, -5.0
+        [ -0.5, -0.5, 0.0,
+            0.5, -0.5, 0.0,
+            0.0, 0.5, 0.0
         ],
         3, // elements per vertex
         null
     );
+
+    document.onkeydown = function(e) {
+        //console.log('Keydown code: ', e.keyCode);
+        switch (e.keyCode) {
+            // w 
+            case 87:
+                camera.forwardSpeed = 1.0;
+                break;
+            // a
+            case 65:
+                camera.strafeSpeed = -1.0;
+                break;
+            // s
+            case 83:
+                camera.forwardSpeed = -1.0;
+                break;
+            // d
+            case 68:
+                camera.strafeSpeed = 1.0;
+                break;
+            default:
+                break;
+        }
+    }    
+    document.onkeyup = function(e) {
+        //console.log('Keyup code: ', e.keyCode);
+        switch (e.keyCode) {
+            // w
+            case 87:
+                camera.forwardSpeed = 0.0;
+                break;
+            // a
+            case 65:
+                camera.strafeSpeed = 0.0;
+                break;
+            // s
+            case 83:
+                camera.forwardSpeed = 0.0;
+                break;
+            // d
+            case 68:
+                camera.strafeSpeed = 0.0;
+                break;
+            default:
+                break;
+        }
+    }
 
     mainLoop();
 }
@@ -117,6 +182,18 @@ function handleFovSlider(fovDegrees) {
         render.perspectiveMatrix
     );
     document.getElementById("fovLabel").innerHTML = "FOV: " + fovDegrees;
+}
+function handlePitchSlider(pitchDegrees) {
+    var pitchRad = pitchDegrees * Math.PI / 180.0;
+    camera.pitch = pitchRad;
+    camera.Update(1.0/60.0);
+    document.getElementById("pitchLabel").innerHTML = "Pitch: " + pitchDegrees;
+}
+function handleYawSlider(yawDegrees) {
+    var yawRad = yawDegrees * Math.PI / 180.0;
+    camera.yaw = yawRad;
+    camera.Update(1.0/60.0);
+    document.getElementById("yawLabel").innerHTML = "Yaw: " + yawDegrees;
 }
 </script>
 
