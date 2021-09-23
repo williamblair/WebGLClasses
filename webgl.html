@@ -64,6 +64,7 @@ var timer = null;
 var shader = null;
 var testTriangleMesh = null;
 var camera = null;
+var cameraRotate = false;
 
 function mainLoop() {
 
@@ -164,6 +165,29 @@ function main() {
                 break;
             default:
                 break;
+        }
+    }
+    document.onmousemove = function(e) {
+        //console.log('movementX, movementY: ', e.movementX, e.movementY);
+        if (cameraRotate) {
+            const rate = 0.001;
+            var pitch = -e.movementY * rate;
+            var yaw = -e.movementX * rate;
+            camera.pitch += pitch;
+            camera.yaw += yaw;
+        } 
+    }
+    document.onmousedown = function(e) {
+        //console.log('mousedown button: ', e.button);
+        // left mouse click
+        if (e.button == 0) {
+            cameraRotate = true;
+        }
+    }
+    document.onmouseup = function(e) {
+        console.log('mouseup button: ', e.button);
+        if (e.button == 0) {
+            cameraRotate = false;
         }
     }
 
