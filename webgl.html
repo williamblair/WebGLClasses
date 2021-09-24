@@ -4,7 +4,6 @@
   <meta charset="utf-8"/>
   <title>WebGL</title>
   
-  <!--<script src="glMatrix-0.9.5.min.js"></script>-->
   <script src="./gl-matrix-min.js"></script>
   
   <style>
@@ -61,15 +60,16 @@
 <script src="./LoopTimer.js"></script>
 <script src="./Shader.js"></script>
 <script src="./Mesh.js"></script>
+<script src="./JSONMesh.js"></script>
 <script src="./FPSCamera.js"></script>
 <script>
 // global vars
 var render = null;
 var timer = null;
 var shader = null;
-var testTriangleMesh = null;
 var camera = null;
-var cameraRotate = false;
+
+var testJsMesh = null;
 
 function mainLoop() {
 
@@ -82,7 +82,7 @@ function mainLoop() {
     );
 
     render.BeginFrame();
-        render.DrawMesh(testTriangleMesh);
+        render.DrawMesh(testJsMesh);
     render.EndFrame();
 
     timer.Update();
@@ -111,27 +111,32 @@ function main() {
         render.perspectiveMatrix
     );
     var identMat = mat4.create();
-    mat4.identity( identMat );
+    mat4.identity(identMat);
     shader.SetMatrixUniform(
         Shader.MODEL_MAT_UNIFORM,
         identMat
     );
 
-    testTriangleMesh = new Mesh(
-        render.gl,
-        [ -0.5, -0.5, 0.0,
-            0.5, -0.5, 0.0,
-            0.0, 0.5, 0.0
-        ],
-        3, // elements per vertex
-        null
-    );
+    // wait until server assets loaded before starting render loop
+    //getJSON("./models/Cube.json", assetsLoaded);
+    getJSON("./models/Monkey.json", assetsLoaded);
+}
 
+function assetsLoaded(err, data) {
+    if (err != null) {
+        console.log(err);
+        Debug.Error("Failed to load asset:" + err);
+        return;
+    }
+    testJsMesh = new JSONMesh(render.gl, data);
+
+    // start rendering now
     mainLoop();
 }
 
 function handleFovSlider(fovDegrees) {
-    render.perspectiveMatrix = mat4.perspective(
+    mat4.perspective(
+        render.perspectiveMatrix,
         fovDegrees,
         render.canvas.width / render.canvas.height,
         1.0,
@@ -163,6 +168,22 @@ function handleCameraInputActive(isChecked) {
     else {
         document.getElementById("cameraInputLabel").innerHTML = "FPS Camera Inactive";
     }
+}
+/* https://stackoverflow.com/questions/12460378/how-to-get-json-from-url-in-javascript */
+function getJSON(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+        var status = xhr.status;
+        if (status === 200) {
+            callback(null, xhr.response);
+        }
+        else {
+            callback(status, xhr.response);
+        }
+    }
+    xhr.send();
 }
 </script>
 

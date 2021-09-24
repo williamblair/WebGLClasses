@@ -106,7 +106,7 @@ class Mesh {
         this.gl.bindVertexArray(null);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
         if (this.numIndices > 0) {
-            this.gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
         }
     }
 }
