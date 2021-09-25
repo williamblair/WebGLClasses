@@ -38,14 +38,6 @@
   <label for="fovSlider" id="fovLabel">FOV: 45.0</label>
 </div>
 
-<div id="pitchSliderDiv" style="position: absolute; top: 70px; left: 10px;">
-  <input id="pitchSlider" type="range" min="-45.0" max="45.0" value="0.0" class="slider" onchange="handlePitchSlider(this.value)"/>
-  <label for="pitchSlider" id="pitchLabel">Pitch: 0.0</label>
-</div>
-<div id="yawSliderDiv" style="position: absolute; top: 90px; left: 10px;">
-  <input id="yawSlider" type="range" min="-45.0" max="45.0" value="0.0" class="slider" onchange="handleYawSlider(this.value)"/>
-  <label for="yawSlider" id="yawLabel">Yaw: 0.0</label>
-</div>
 <div id="cameraInputActiveDiv" style="position: absolute; top: 110px; left: 10px;">
   <input id="cameraInputActive" type="checkbox" checked onchange="handleCameraInputActive(this.checked)"/>
   <label for="cameraInputActive" id="cameraInputLabel">FPS Camera Active</label>
@@ -156,7 +148,7 @@ function assetsLoaded(err, data) {
 function handleFovSlider(fovDegrees) {
     mat4.perspective(
         render.perspectiveMatrix,
-        fovDegrees,
+        fovDegrees * Math.PI / 180.0,
         render.canvas.width / render.canvas.height,
         1.0,
         1000.0
@@ -166,18 +158,6 @@ function handleFovSlider(fovDegrees) {
         render.perspectiveMatrix
     );
     document.getElementById("fovLabel").innerHTML = "FOV: " + fovDegrees;
-}
-function handlePitchSlider(pitchDegrees) {
-    var pitchRad = pitchDegrees * Math.PI / 180.0;
-    camera.pitch = pitchRad;
-    camera.Update(1.0/60.0);
-    document.getElementById("pitchLabel").innerHTML = "Pitch: " + pitchDegrees;
-}
-function handleYawSlider(yawDegrees) {
-    var yawRad = yawDegrees * Math.PI / 180.0;
-    camera.yaw = yawRad;
-    camera.Update(1.0/60.0);
-    document.getElementById("yawLabel").innerHTML = "Yaw: " + yawDegrees;
 }
 function handleCameraInputActive(isChecked) {
     camera.keyboardInputActive = (isChecked) ? true : false;
