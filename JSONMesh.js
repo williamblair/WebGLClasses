@@ -26,26 +26,42 @@ Face.prototype = {
 
 class JSONMesh extends Mesh {
 //class JSONMesh  {
-   
+
     /**
         @brief JSONMesh constructor
         @param [gl] webgl context
         @param [jsonData] the loaded json model object
-    */ 
+    */
     constructor(gl, jsonData) {
         var vertices = jsonData.vertices;
         var faces = JSONMesh.parseJSON(gl, jsonData);
         var indices = JSONMesh.getIndicesFromFaces(faces);
-        //console.log('json vertices, faces, indices: ',
-        //    vertices, 
-        //    faces, 
-        //    indices
+        var normals = JSONMesh.calculateVertexNormals(vertices, indices);
+        //console.log('json data: ', jsonData);
+        //console.log('json vertices, faces, indices, normals: ',
+        //    vertices,
+        //    faces,
+        //    indices,
+        //    normals
         //);
         if (jsonData.materials.length > 0) {
             // diffuseColor = data.materials[0].colorDiffuse;
         }
-        const elementsPerVertex = 3;
-        super(gl, vertices, elementsPerVertex, indices);
+        // vertices and normals
+        const elementsPerVertex = 6;
+        var combinedVertices = [];
+        if (normals.length != vertices.length) {
+            Debug.Error("JSONMesh normals length != vertices length");
+        }
+        for (var i=0; i < vertices.length; i+=3) {
+            combinedVertices.push(vertices[i+0]);
+            combinedVertices.push(vertices[i+1]);
+            combinedVertices.push(vertices[i+2]);
+            combinedVertices.push(normals[i+0]);
+            combinedVertices.push(normals[i+1]);
+            combinedVertices.push(normals[i+2]);
+        }
+        super(gl, combinedVertices, elementsPerVertex, indices);
     }
 
     static isBitSet( value, position ) {
@@ -61,7 +77,7 @@ class JSONMesh extends Mesh {
             offset,
             zLength,
             nVertices,
-            
+
             colorIndex,
             normalIndex,
             uvIndex,
@@ -168,7 +184,7 @@ class JSONMesh extends Mesh {
                         normals[ normalIndex++ ],
                         normals[ normalIndex ]
                     );
-                    face.vertexNormals.push(normal); 
+                    face.vertexNormals.push(normal);
                 }
             }
 
@@ -182,14 +198,14 @@ class JSONMesh extends Mesh {
                     face.vertexColors.push(colorIndex);
                 }
             }
-            
+
             faceArray.push(face);
         } // end while (offset < zLength)
 
         return faceArray;
     }
 
-    
+
     static getIndicesFromFaces(faces) {
         var indices = [];
         for (var i=0; i<faces.length; ++i) {
@@ -199,5 +215,56 @@ class JSONMesh extends Mesh {
         }
         return indices;
     }
-}
 
+    static calculateVertexNormals(vertices, indices)  {
+        var vertexVectors = [];
+        var normalVectors = [];
+        var normals = [];
+        var j;
+        for (var i=0; i < vertices.length; i+=3) {
+            var vector = vec3.fromValues(vertices[i], vertices[i+1], vertices[i+2]);
+            var normal = vec3.create();
+            normalVectors.push(normal);
+            vertexVectors.push(vector);
+        }
+
+        try {
+            for (j=0; j < indices.length; j+=3) {
+                // v1 - v0
+                var vec1 = vec3.create();
+                vec3.subtract(
+                    vec1,
+                    vertexVectors[indices[j+1]],
+                    vertexVectors[indices[j]]
+                );
+                // v2 - v1
+                var vec2 = vec3.create();
+                vec3.subtract(
+                    vec2,
+                    vertexVectors[indices[j+2]],
+                    vertexVectors[indices[j+1]]
+                );
+
+                var normal = vec3.create();
+                vec3.cross(normal, vec1, vec2);
+
+                // calculate normal from three verts is same for all,
+                // then the contribution from each normal to vertex is the same
+                vec3.add(normalVectors[indices[j+0]], normalVectors[indices[j+0]], normal);
+                vec3.add(normalVectors[indices[j+1]], normalVectors[indices[j+1]], normal);
+                vec3.add(normalVectors[indices[j+2]], normalVectors[indices[j+2]], normal);
+            }
+        } catch (e) {
+            Debug.Error(j);
+        }
+
+        for (j=0; j < normalVectors.length; ++j) {
+            vec3.normalize(normalVectors[j], normalVectors[j]);
+            normals.push(normalVectors[j][0]);
+            normals.push(normalVectors[j][1]);
+            normals.push(normalVectors[j][2]);
+        }
+
+        return normals;
+    }
+}

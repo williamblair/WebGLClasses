@@ -12,7 +12,7 @@ class Renderer {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         Debug.Log(
-            "canvas width, height: " + 
+            "canvas width, height: " +
             this.canvas.width + ", " + this.canvas.height
         );
         if (!this.canvas) {
@@ -31,6 +31,7 @@ class Renderer {
             this.clearColor[2],
             1.0
         );
+        this.gl.enable(this.gl.DEPTH_TEST);
         const aspect = (1.0*this.canvas.width) / (1.0*this.canvas.height);
         const fovDegrees = 45.0;
         this.perspectiveMatrix = mat4.create();
@@ -87,4 +88,3 @@ class Renderer {
         this.gl.bindVertexArray(null);
     }
 }
-

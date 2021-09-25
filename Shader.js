@@ -1,5 +1,5 @@
 /* Shader class */
-class Shader 
+class Shader
 {
     /**
         @brief Shader constructor
@@ -33,7 +33,7 @@ class Shader
     Use() {
         this.gl.useProgram(this.shaderProgram);
     }
-    
+
     SetMatrixUniform(name, mat) {
         const loc = this.gl.getUniformLocation(this.shaderProgram, name);
         if (!loc) {
@@ -42,6 +42,26 @@ class Shader
         }
 
         this.gl.uniformMatrix4fv(loc, false, mat);
+    }
+
+    SetVec3Uniform(name, vec) {
+        const loc = this.gl.getUniformLocation(this.shaderProgram, name);
+        if (!loc) {
+            Debug.Log("Shader SetVec3Uniform: failed to get location for " + name);
+            return;
+        }
+
+        this.gl.uniform3fv(loc, vec);
+    }
+
+    SetFloatUniform(name, val) {
+        const loc = this.gl.getUniformLocation(this.shaderProgram, name);
+        if (!loc) {
+            Debug.Log("Shader SetFloatUniform: failed to get location for " + name);
+            return;
+        }
+
+        this.gl.uniform1f(loc, val);
     }
 
     createShader(shaderType, source) {
@@ -56,13 +76,17 @@ class Shader
 
         return shader;
     }
-
-
 };
 
 // constants
 Shader.PERSPECTIVE_MAT_UNIFORM = "uPerspectiveMatrix";
 Shader.VIEW_MAT_UNIFORM = "uViewMatrix";
 Shader.MODEL_MAT_UNIFORM = "uModelMatrix";
-
-
+Shader.LIGHT_POS_UNIFORM = "uLightPosition";
+Shader.LIGHT_AMBIENT_UNIFORM = "uLightAmbient";
+Shader.LIGHT_DIFFUSE_UNIFORM = "uLightDiffuse";
+Shader.LIGHT_SPECULAR_UNIFORM = "uLightSpecular";
+Shader.MATERIAL_AMBIENT_UNIFORM = "uMaterialAmbient";
+Shader.MATERIAL_DIFFUSE_UNIFORM = "uMaterialDiffuse";
+Shader.MATERIAL_SPECULAR_UNIFORM = "uMaterialSpecular";
+Shader.MATERIAL_SHININESS_UNIFORM = "uMaterialShininess";
