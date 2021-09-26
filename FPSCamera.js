@@ -70,7 +70,7 @@ class FPSCamera {
         //vec3.normalize(this.forward);
         vec3.normalize(this.forward, this.forward);
         //console.log("FPS Camera Update forward: ", this.forward);
-        
+
         vec3.add(this.target, this.position, this.forward);
         //console.log("FPS camera target: ", this.target);
 
@@ -107,7 +107,7 @@ class FPSCamera {
             }
             //console.log('Keydown code: ', e.keyCode);
             switch (e.keyCode) {
-                // w 
+                // w
                 case 87:
                     thisObj.forwardSpeed = 1.0;
                     break;
@@ -126,7 +126,7 @@ class FPSCamera {
                 default:
                     break;
             }
-        }    
+        }
         document.onkeyup = function(e) {
             //console.log('Keyup code: ', e.keyCode);
             switch (e.keyCode) {
@@ -156,9 +156,9 @@ class FPSCamera {
                 const rate = 0.001;
                 var pitch = -e.movementY * rate;
                 var yaw = -e.movementX * rate;
-                camera.pitch += pitch;
-                camera.yaw += yaw;
-            } 
+                thisObj.pitch += pitch;
+                thisObj.yaw += yaw;
+            }
         }
         document.onmousedown = function(e) {
             //console.log('mousedown button: ', e.button);
@@ -176,4 +176,3 @@ class FPSCamera {
     }
 
 }
-
