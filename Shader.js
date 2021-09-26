@@ -64,6 +64,16 @@ class Shader
         this.gl.uniform1f(loc, val);
     }
 
+    SetIntUniform(name, val) {
+      const loc = this.gl.getUniformLocation(this.shaderProgram, name);
+      if (!loc) {
+          Debug.Log("Shader SetIntUniform: failed to get location for " + name);
+          return;
+      }
+
+      this.gl.uniform1i(loc, val);
+    }
+
     createShader(shaderType, source) {
         var shader = this.gl.createShader(shaderType);
         this.gl.shaderSource(shader, source);
@@ -90,3 +100,4 @@ Shader.MATERIAL_AMBIENT_UNIFORM = "uMaterialAmbient";
 Shader.MATERIAL_DIFFUSE_UNIFORM = "uMaterialDiffuse";
 Shader.MATERIAL_SPECULAR_UNIFORM = "uMaterialSpecular";
 Shader.MATERIAL_SHININESS_UNIFORM = "uMaterialShininess";
+Shader.TEXTURE_UNIFORM = "uTexture";

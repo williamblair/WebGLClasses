@@ -43,6 +43,8 @@
   <label for="cameraInputActive" id="cameraInputLabel">FPS Camera Active</label>
 </div>
 
+<img id="MonkeyDiffuse" src="./models/MonkeyDiffuse.jpg" style="display:none;"/>
+
 <div id="canvasDiv">
 <canvas id="myCanvas"></canvas>
 </div>
@@ -51,11 +53,13 @@
 <script src="./Renderer.js"></script>
 <script src="./LoopTimer.js"></script>
 <script src="./Shader.js"></script>
+<script src="./Material.js"></script>
+<script src="./Texture.js"></script>
 <script src="./Mesh.js"></script>
 <script src="./JSONMesh.js"></script>
 <script src="./FPSCamera.js"></script>
 <script src="./PositionLight.js"></script>
-<script src="./Material.js"></script>
+
 <script>
 // global vars
 var render = null;
@@ -65,7 +69,7 @@ var camera = null;
 var posLight = null;
 
 var testJsMesh = null;
-var testMaterial = null;
+var testTexture = null;
 
 function mainLoop() {
 
@@ -121,6 +125,10 @@ function main() {
     );
     posLight.SetUniforms(shader);
 
+    testTexture = new Texture(render.gl, "MonkeyDiffuse");
+    testTexture.Use();
+    testTexture.SetUniforms(shader);
+
     // wait until server assets loaded before starting render loop
     //getJSON("./models/Cube.json", assetsLoaded);
     getJSON("./models/Monkey.json", assetsLoaded);
@@ -133,13 +141,7 @@ function assetsLoaded(err, data) {
         return;
     }
     testJsMesh = new JSONMesh(render.gl, data);
-    testMaterial = new Material(
-        [0.1, 0.1, 0.1], // ambient
-        [1.0, 1.0, 1.0], // diffuse
-        [1.0, 1.0, 1.0], // specular
-        230.0 // shininess
-    );
-    testMaterial.SetUniforms(shader);
+    testJsMesh.material.SetUniforms(shader);
 
     // start rendering now
     mainLoop();
@@ -200,6 +202,7 @@ uniform vec3 uLightPosition;
 out vec3 vNormal;
 out vec3 vLightRay;
 out vec3 vEyeVec;
+out vec2 vTexCoord;
 
 void calcLighting() {
 
@@ -221,6 +224,7 @@ void main() {
 
     calcLighting();
 
+    vTexCoord = aTexCoord;
     gl_Position = uPerspectiveMatrix *
                   uViewMatrix *
                   uModelMatrix *
@@ -240,9 +244,12 @@ uniform vec3 uMaterialDiffuse;
 uniform vec3 uMaterialSpecular;
 uniform float uMaterialShininess;
 
+uniform sampler2D uTexture;
+
 in vec3 vNormal;
 in vec3 vLightRay;
 in vec3 vEyeVec;
+in vec2 vTexCoord;
 
 vec4 calcBlinnPhong() {
     vec3 L = normalize(vLightRay);
@@ -258,7 +265,10 @@ vec4 calcBlinnPhong() {
 
     if (lambertTerm > 0.0)
     {
-        Id = uLightDiffuse * uMaterialDiffuse * lambertTerm;
+        Id = uLightDiffuse *
+             texture(uTexture, vTexCoord).xyz *
+             uMaterialDiffuse *
+             lambertTerm;
         vec3 E = normalize(vEyeVec);
         vec3 R = reflect(L,N);
         float specular = pow(max(dot(R,E),0.0), uMaterialShininess);
