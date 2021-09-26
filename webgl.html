@@ -45,6 +45,13 @@
 
 <img id="MonkeyDiffuse" src="./models/MonkeyDiffuse.jpg" style="display:none;"/>
 
+<img id="cube01Right" src="./images/grimmnight_right.png" style="display:none;"/>
+<img id="cube01Left" src="./images/grimmnight_left.png" style="display:none;"/>
+<img id="cube01Top" src="./images/grimmnight_top.png" style="display:none;"/>
+<img id="cube01Bottom" src="./images/grimmnight_bottom.png" style="display:none;"/>
+<img id="cube01Back" src="./images/grimmnight_back.png" style="display:none;"/>
+<img id="cube01Front" src="./images/grimmnight_front.png" style="display:none;"/>
+
 <div id="canvasDiv">
 <canvas id="myCanvas"></canvas>
 </div>
@@ -57,6 +64,7 @@
 <script src="./Texture.js"></script>
 <script src="./Mesh.js"></script>
 <script src="./JSONMesh.js"></script>
+<script src="./SkyMap.js"></script>
 <script src="./FPSCamera.js"></script>
 <script src="./PositionLight.js"></script>
 
@@ -65,27 +73,57 @@
 var render = null;
 var timer = null;
 var shader = null;
+var skyMapShader = null;
 var camera = null;
 var posLight = null;
 
 var testJsMesh = null;
+var identMat = null;
 var testTexture = null;
+var testSkyMap = null;
 
-function mainLoop() {
+function drawSkyMap() {
+    skyMapShader.Use();
+    testSkyMap.Use();
+    testSkyMap.SetUniforms(
+        skyMapShader,
+        render.perspectiveMatrix,
+        camera.viewMatrix
+    );
+    render.DrawMesh(testSkyMap.mesh);
+}
 
+function drawTestMesh() {
     shader.Use();
 
-    camera.Update(timer.dt / 1000.0);
     shader.SetMatrixUniform(
         Shader.VIEW_MAT_UNIFORM,
         camera.viewMatrix
     );
+    shader.SetMatrixUniform(
+        Shader.PERSPECTIVE_MAT_UNIFORM,
+        render.perspectiveMatrix
+    );
+    shader.SetMatrixUniform(
+        Shader.MODEL_MAT_UNIFORM,
+        identMat
+    );
+    posLight.SetUniforms(shader);
+    testTexture.Use();
+    testTexture.SetUniforms(shader);
+
+    render.DrawMesh(testJsMesh);
+}
+
+function mainLoop() {
+
+    camera.Update(timer.dt / 1000.0);
+    timer.Update();
 
     render.BeginFrame();
-        render.DrawMesh(testJsMesh);
+        drawSkyMap()
+        drawTestMesh();
     render.EndFrame();
-
-    timer.Update();
 
     window.requestAnimationFrame(mainLoop);
 }
@@ -101,21 +139,20 @@ function main() {
         document.getElementById("vertexShader").text,
         document.getElementById("fragmentShader").text
     );
+    skyMapShader = new Shader(
+        render.gl,
+        document.getElementById("skyVertexShader").text,
+        document.getElementById("skyFragmentShader").text,
+    );
+
     shader.Use();
 
     camera = new FPSCamera();
     //camera.Update(1.0/60.0);
 
-    shader.SetMatrixUniform(
-        Shader.PERSPECTIVE_MAT_UNIFORM,
-        render.perspectiveMatrix
-    );
-    var identMat = mat4.create();
+    identMat = mat4.create();
     mat4.identity(identMat);
-    shader.SetMatrixUniform(
-        Shader.MODEL_MAT_UNIFORM,
-        identMat
-    );
+
 
     posLight = new PositionLight(
         [0.0, 10.0, 10.0], // position
@@ -123,11 +160,18 @@ function main() {
         [1.0, 1.0, 1.0], // diffuse
         [1.0, 1.0, 1.0] // specular
     );
-    posLight.SetUniforms(shader);
 
     testTexture = new Texture(render.gl, "MonkeyDiffuse");
-    testTexture.Use();
-    testTexture.SetUniforms(shader);
+
+    testSkyMap = new SkyMap(
+        render.gl,
+        "cube01Right",
+        "cube01Left",
+        "cube01Top",
+        "cube01Bottom",
+        "cube01Back",
+        "cube01Front"
+    );
 
     // wait until server assets loaded before starting render loop
     //getJSON("./models/Cube.json", assetsLoaded);
@@ -283,6 +327,34 @@ out vec4 outColor;
 void main() {
     //outColor = vec4(1.0, 0.0, 0.0, 1.0);
     outColor = calcBlinnPhong();
+}
+</script>
+
+<script id="skyVertexShader" type="x-shader/x-vertex">#version 300 es
+layout(location = 0) in vec3 aPosition;
+
+uniform mat4 uPerspectiveMatrix;
+uniform mat4 uViewMatrix;
+
+out highp vec3 vTexCoord;
+
+void main() {
+    vTexCoord = aPosition.xyz;
+    gl_Position = uPerspectiveMatrix *
+                  uViewMatrix *
+                  vec4(aPosition.xyz, 1.0);
+}
+</script>
+
+<script id="skyFragmentShader" type="x-shader/x-fragment">#version 300 es
+precision mediump float;
+
+uniform samplerCube uCubeTexture;
+
+in highp vec3 vTexCoord;
+out vec4 outColor;
+void main() {
+    outColor = texture(uCubeTexture, vTexCoord);
 }
 </script>
 

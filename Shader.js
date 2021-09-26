@@ -101,3 +101,4 @@ Shader.MATERIAL_DIFFUSE_UNIFORM = "uMaterialDiffuse";
 Shader.MATERIAL_SPECULAR_UNIFORM = "uMaterialSpecular";
 Shader.MATERIAL_SHININESS_UNIFORM = "uMaterialShininess";
 Shader.TEXTURE_UNIFORM = "uTexture";
+Shader.CUBE_TEX_UNIFORM = "uCubeTexture";
