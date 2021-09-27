@@ -48,26 +48,19 @@ class FPSCamera {
             );
         }
 
-        /* I haven't figured out how to use quats in this version of glMatrix... */
-        //this.pitch = 0.0 * Math.PI / 180.0;
-        var pitchRot = mat4.create();
-        mat4.identity(pitchRot);
-        mat4.rotate(pitchRot, pitchRot, this.pitch, [1.0, 0.0, 0.0]);
-        vec3.transformMat4(this.up, [0.0, 1.0, 0.0], pitchRot);
+        var pitchRot = quat.create();
+        quat.rotateX(pitchRot, pitchRot, this.pitch);
+        vec3.transformQuat(this.up, [0.0, 1.0, 0.0], pitchRot);
         vec3.normalize(this.up, this.up);
         //console.log("FPS Camera Update up: ", this.up);
 
-        //this.yaw = 0.0 * Math.PI / 180.0;
-        var yawRot = mat4.create();
-        mat4.identity(yawRot);
-        mat4.rotate(yawRot, yawRot, this.yaw, [0.0, 1.0, 0.0]);
-        vec3.transformMat4(this.right, [1.0, 0.0, 0.0], yawRot);
+        var yawRot = quat.create();
+        quat.rotateY(yawRot, yawRot, this.yaw);
+        vec3.transformQuat(this.right, [1.0, 0.0, 0.0], yawRot);
         vec3.normalize(this.right, this.right);
         //console.log("FPS Camera Update right: ", this.right);
 
-        this.forward = vec3.fromValues(0.0, 0.0, 0.0);
         vec3.cross(this.forward, this.up, this.right);
-        //vec3.normalize(this.forward);
         vec3.normalize(this.forward, this.forward);
         //console.log("FPS Camera Update forward: ", this.forward);
 

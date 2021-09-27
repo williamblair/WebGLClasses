@@ -28,40 +28,28 @@ class OrbitCamera {
         @param [dt] delta frame time in seconds
     */
     Update(dt) {
-        var tmpPos = vec3.fromValues(1.0, 0.0, 0.0);
+        vec3.set(this.position, 1.0, 0.0, 0.0);
         var pitchRotAxis = vec3.fromValues(1.0, 0.0, 0.0);
 
-        //this.yaw = -90.0 * Math.PI / 180.0;
-        var yawRot = mat4.create();
-        mat4.identity(yawRot);
-        mat4.rotate(yawRot, yawRot, this.yaw, [0.0, 1.0, 0.0]);
-        vec3.transformMat4(tmpPos, tmpPos, yawRot);
-        vec3.normalize(tmpPos, tmpPos);
+        var yawRot = quat.create();
+        quat.rotateY(yawRot, yawRot, this.yaw);
+        vec3.transformQuat(this.position, this.position, yawRot);
+        vec3.normalize(this.position, this.position);
         //console.log('FPS Camera Update tmpPos yaw: ', tmpPos);
 
-        var pitchAxisRot = mat4.create();
-        mat4.identity(pitchAxisRot);
-        mat4.rotate(
-            pitchAxisRot,
-            pitchAxisRot,
-            this.yaw + (Math.PI / 2.0), // offset by 90 degrees
-            [0.0, 1.0, 0.0]
-        );
-        vec3.transformMat4(pitchRotAxis, pitchRotAxis, pitchAxisRot);
+        var pitchAxisRot = quat.create();
+        quat.rotateY(pitchAxisRot, pitchAxisRot, this.yaw + (Math.PI/2.0));
+        vec3.transformQuat(pitchRotAxis, pitchRotAxis, pitchAxisRot);
         vec3.normalize(pitchRotAxis, pitchRotAxis);
 
-        var pitchRot = mat4.create();
-        mat4.identity(pitchRot);
-        mat4.rotate(pitchRot, pitchRot, this.pitch, pitchRotAxis);
-        vec3.transformMat4(tmpPos, tmpPos, pitchRot);
-        vec3.normalize(tmpPos, tmpPos);
+        var pitchRot = quat.create();
+        quat.setAxisAngle(pitchRot, pitchRotAxis, this.pitch);
+        vec3.transformQuat(this.position, this.position, pitchRot);
+        vec3.normalize(this.position, this.position);
         //console.log('FPS Camera Update tmpPos pitch: ', tmpPos);
 
-        vec3.scale(tmpPos, tmpPos, this.radius);
+        vec3.scale(this.position, this.position, this.radius);
         //console.log('FPS Camera Update tmpPos radius: ', tmpPos);
-
-        vec3.copy(this.position, tmpPos);
-        //console.log('FPS Camera final position: ', this.position);
 
         mat4.lookAt(
             this.viewMatrix,
