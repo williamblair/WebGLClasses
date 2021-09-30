@@ -3,6 +3,14 @@
 <head>
   <meta charset="utf-8"/>
   <title>Curve Test</title>
+
+  
+  <script src="./gl-matrix-min.js"></script>
+  
+  <script src="./Bezier.js"></script>
+  <script src="./Interpolation.js"></script>
+  <script src="./Frame.js"></script>
+  <script src="./Track.js"></script>
 </head>
 <body>
 <canvas id="mycanvas" width="640" height="480"></canvas>
@@ -10,179 +18,6 @@
 <script>
 var canvas = document.getElementById("mycanvas");
 var ctx = canvas.getContext("2d");
-
-// interpolation enum
-const Interpolation = {
-  Constant: "Constant",
-  Linear: "Linear",
-  Cubic: "Cubic"
-};
-class Vec3Frame {
-  constructor() {
-    this.mValue = [0.0, 0.0, 0.0];
-    this.mIn = [0.0, 0.0, 0.0];
-    this.mOut = [0.0, 0.0, 0.0];
-    this.mTime = 0.0;
-  }
-}
-class QuatFrame {
-  constructor() {
-    this.mValue = [0.0, 0.0, 0.0, 0.0];
-    this.mIn = [0.0, 0.0, 0.0, 0.0];
-    this.mOut = [0.0, 0.0, 0.0, 0.0];
-    this.mTime = 0.0;
-  }
-}
-class Vec3Track {
-  constructor() {
-    this.mFrames = [];
-    this.mInterpolation = Interpolation.Linear; // default
-  }
-  GetStartTime() {
-    return this.mFrames[0].mTime;
-  }
-  GetEndTime() {
-    return this.mFrames[this.mFrames.length-1].mTime;
-  }
-  /**
-    @brief return interpolated track frame at given time t
-    @param [t] time between GetStartTime() and GetEndTime()
-    @param [looping] boolean wether to wrap around if t before/after track
-  */
-  Sample(t, looping) {
-    switch (this.mInterpolation) {
-      case Interpolation.Constant: return this.SampleConstant(t, looping);
-      case Interpolation.Linear: return this.SampleLinear(t, looping);
-      case Interpolation.Cubic: return this.SampleCubic(t, looping);
-    }
-    return this.SampleConstant(t, looping);
-  }
-  SampleConstant(t, looping) {
-    var frame = this.frameIndex(t, looping);
-    if (frame < 0 || frame > this.mFrames.length) {
-      return [0.0, 0.0, 0.0];
-    }
-    // TODO? - mFrames may be an array of single values;
-    // may need to extract 3 vals instead
-    return this.mFrames[frame];
-  }
-  SampleLinear(t, looping) {
-  }
-  SampleCubic(t, looping) {
-  }
-
-  /**
-    @brief resize the internal mFrames array with Vec3Frames
-    @param [size] the number of frames to resize mFrames to
-  */
-  Resize(size) {
-    this.mFrames.length = size;
-    for (var i = 0; i < this.mFrames.length; ++i) {
-      this.mFrames[i] = new Vec3Frame();
-    }
-  }
-
-  /**
-    @brief hermite interpolation helper function
-  */
-  hermite(t, p1, s1, p2, s2) {
-    const tt = t*t;
-    const ttt = tt*t;
-    const h1 = 2.0*ttt - 3.0*tt + 1.0;
-    const h2 = -2.0*ttt + 3.0*tt;
-    const h3 = ttt - 2.0 * tt + t;
-    const h4 = ttt - tt;
-    return AddVec3(
-      MulVec3Scalar(p1,h1),
-      AddVec3(
-        MulVec3Scalar(p2,h2),
-        AddVec3(MulVec3Scalar(s1,h3),MulVec3Scalar(s2,h4))
-      )
-    );
-  }
-
-  /**
-    @brief helper function;
-           calculates the nearest frame to the left of the input time
-  */
-  frameIndex(t, looping) {
-    const size = this.mFrames.length;
-    if (size <= 1) {
-      return -1;
-    }
-    var time = t;
-    if (looping) {
-      const startTime = this.mFrames[0].mTime;
-      const endTime = this.mFrames[size - 1].mTime;
-      const duration = endTime - startTime;
-      //time = (time - startTime) % duration;
-      time = time - startTime;
-      while (time > duration) {
-        time -= duration;
-      }
-      while (time < duration) {
-        time += duration;
-      }
-      time = time + startTime;
-    }
-    // no looping
-    else {
-      if (time <= this.mFrames[0].mTime) {
-        return 0;
-      }
-      // we'll need to sample the next frame as well, hence -2
-      if (time >= this.mFrames[size - 2].mTime) {
-        return size - 2;
-      }
-    }
-
-    for (var i = size - 1; i >=0; --i) {
-      if (time >= this.mFrames[i].mTime) {
-        return i;
-      }
-    }
-
-    // invalid code; should never reach!
-    return -1;
-  }
-  /**
-    @brief helper function to limit input time within track range
-  */
-  adjustTimeToFitTrack(t, looping) {
-    const size = this.mFrames.size();
-    if (size <= 1) {
-      return 0.0;
-    }
-    var time = t;
-    const startTime = this.mFrames[0].mTime;
-    const endTime = this.mFrames[size - 1].mTime;
-    const duration = endTime - startTime;
-    if (duration <= 0.0) {
-      return 0.0;
-    }
-    if (looping) {
-      time = time - startTime;
-      while (time < duration) {
-        time += duration;
-      }
-      while (time > duration) {
-        time -= duration;
-      }
-      time = startTime + time;
-    }
-    // no looping
-    else {
-      if (time < startTime) {
-        time = startTime;
-      }
-      if (time > endTime) {
-        time = endTime;
-      }
-    }
-    
-    return time;
-  }
-} // end Vec3Track class
 
 function DrawPoint(x, y, color, pointSize) {
   ctx.fillStyle = color;
@@ -196,17 +31,6 @@ function DrawLine(x1, y1, x2, y2, color) {
 }
 
 /**
-  @brief linear interpolate vec3s a and b based on t
-  @return interpolated vec3
-*/
-function LerpVec3(a, b, t) {
-  return [
-    (1.0 - t)*a[0] + t*b[0],
-    (1.0 - t)*a[1] + t*b[1],
-    (1.0 - t)*a[2] + t*b[2]
-  ];
-}
-/**
   @brief linear interpolate floats a and b based on t
   @return interpolated float
 */
@@ -214,70 +38,25 @@ function LerpFloat(a, b, t) {
   return a + (b-a)*t;
 }
 
-// TODO - quaternion interpolation
-
-
-/**
-  @brief adds two vec3s and returns the result
-*/
-function AddVec3(a, b) {
-  return [
-    a[0] + b[0],
-    a[1] + b[1],
-    a[2] + b[2]
-  ];
-}
-
-/**
-  @brief multiplies a vec3 and a scalar and returns the result
-  @param [v] the vector
-  @param [s] the scalar
-*/
-function MulVec3Scalar(v, s) {
-  return [
-    v[0] * s,
-    v[1] * s,
-    v[2] * s
-  ];
-}
-
-class Bezier {
-  constructor(P1, C1, P2, C2) {
-    this.P1 = P1 || [0.0, 0.0, 0.0]; // point 1
-    this.C1 = C1 || [0.0, 0.0, 0.0]; // control 1
-    this.P2 = P2 || [0.0, 0.0, 0.0]; // point 2
-    this.C2 = C2 || [0.0, 0.0, 0.0]; // point 3
-  }
-
-  /**
-    @brief Interpolate the point on the curve based on input time t (0<=t<=1)
-    @return Interpolated length 3 array point on curve
-  */
-  Interpolate(t) {
-   /* var A = LerpVec3(this.P1, this.C1, t);
-    var B = LerpVec3(this.C2, this.P2, t);
-    var C = LerpVec3(this.C1, this.C2, t);
-    var D = LerpVec3(A, C, t);
-    var E = LerpVec3(C, B, t);
-    var R = LerpVec3(D, E, t);*/
-    var p1res = MulVec3Scalar(this.P1, (1-t)*(1-t)*(1-t));
-    var c1res = MulVec3Scalar(this.C1, 3.0*((1-t)*(1-t))*t);
-    var c2res = MulVec3Scalar(this.C2, 3.0*((1-t)*(t*t)));
-    var p2res = MulVec3Scalar(this.P2, t*t*t);
-    return AddVec3(p1res,AddVec3(p2res,AddVec3(c1res, c2res)));
-  }
-}
-
 /**
   @brief hermite spline interpolation of input time t and length 3 arrays
   @return interpolated length 3 point on curve
 */
 function Hermite(t, p1, s1, p2, s2) {
-  var p1res = MulVec3Scalar(p1, (1.0 + 2.0*t)*((1.0-t) * (1.0-t)));
-  var s1res = MulVec3Scalar(s1, t*((1.0-t)*(1.0-t)));
-  var p2res = MulVec3Scalar(p2, (t*t) * (3.0 - 2.0*t));
-  var s2res = MulVec3Scalar(s2, (t*t)*(t-1.0));
-  return AddVec3(p1res,AddVec3(s1res,AddVec3(p2res,s2res)));
+  const tt = t*t;
+  const ttt = tt*t;
+  const h1 = 2.0*ttt - 3.0*tt + 1.0;
+  const h2 = -2.0*ttt + 3.0*tt;
+  const h3 = ttt - 2.0 * tt + t;
+  const h4 = ttt - tt;
+  var p1h1 = vec3.create(); vec3.scale(p1h1, p1, h1);
+  var p2h2 = vec3.create(); vec3.scale(p2h2, p2, h2);
+  var s1h3 = vec3.create(); vec3.scale(s1h3, s1, h3);
+  var s2h4 = vec3.create(); vec3.scale(s2h4, s2, h4);
+  vec3.add(p1h1, p1h1, p2h2);
+  vec3.add(p1h1, p1h1, s1h3);
+  vec3.add(p1h1, p1h1, s2h4);
+  return p1h1;
 }
 
 var p1 = [10.0, 400.0, 0.0];
