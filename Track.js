@@ -148,7 +148,7 @@ class Vec3Track {
     var p1h1 = vec3.create(); vec3.scale(p1h1, p1, h1);
     var p2h2 = vec3.create(); vec3.scale(p2h2, p2, h2);
     var s1h3 = vec3.create(); vec3.scale(s1h3, s1, h3);
-    var s2h4 = vec3.create(); vec3.scale(s1h4, s2, h4);
+    var s2h4 = vec3.create(); vec3.scale(s2h4, s2, h4);
     vec3.add(p1h1, p1h1, p2h2);
     vec3.add(p1h1, p1h1, s1h3);
     vec3.add(p1h1, p1h1, s2h4);
