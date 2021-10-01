@@ -489,3 +489,94 @@ class QuatTrack {
   }
 } // end QuatTrack class
 
+class TransformTrack {
+  constructor() {
+    this.mId = 0;
+    this.mPosition = new Vec3Track();
+    this.mRotation = new QuatTrack();
+    this.mScale = new Vec3Track();
+  }
+
+  GetStartTime() {
+    var result = 0.0;
+    var isSet = false;
+    if (this.mPosition.mFrames.length > 1) {
+      result = this.mPosition.GetStartTime();
+      isSet = true;
+    }
+    if (this.mRotation.mFrames.length > 1) {
+      const rotationStart = this.mRotation.GetStartTime();
+      if (rotationStart < result || !isSet) {
+        result = rotationStart;
+        isSet = true;
+      }
+    }
+    if (this.mScale.mFrames.length > 1) {
+      const scaleStart = this.mScale.GetStartTime();
+      if (scaleStart < result || !isSet) {
+        result = scaleStart;
+        isSet = true;
+      }
+    }
+    return result;
+  }
+  GetEndTime() {
+    var result = 0.0;
+    var isSet = false;
+    if (this.mPosition.mFrames.length > 1) {
+      result = this.mPosition.GetEndTime();
+      isSet = true;
+    }
+    if (this.mRotation.mFrames.length > 1) {
+      const rotationEnd = this.mRotation.GetEndTime();
+      if (rotationEnd > result || !isSet) {
+        result = rotationEnd;
+        isSet = true;
+      }
+    }
+    if (this.mScale.mFrames.length > 1) {
+      const scaleEnd = this.mScale.GetEndTime();
+      if (scaleEnd > result || !isSet) {
+        result = scaleEnd;
+        isSet = true;
+      }
+    }
+    return result;
+  }
+  IsValid() {
+    return this.mPosition.mFrames.length > 1 ||
+           this.mRotation.mFrames.length > 1 ||
+           this.mScale.mFrames.length > 1;
+  }
+
+  /**
+    @brief sample the track at a given time
+    @param [ref] If an internal track is invalid, the part from this reference
+                 will be used instead (position, rotation, or scale)
+    @param [time] the time to sample at (between 0 and 1)
+    @param [looping] bool wether to wrap around sample time before/after duration
+    @return a sampled Transform object
+  */
+  Sample(ref, time, looping) {
+    /* Default to reference values */
+    var result = new Transform();
+    vec3.copy(result.mPosition, ref.mPosition);
+    quat.copy(result.mRotation, ref.mRotation);
+    vec3.copy(result.mScale, ref.mScale);
+
+    /* Only sample if valid */
+    if (this.mPosition.mFrames.length > 1) {
+      result.mPosition = this.mPosition.Sample(time, looping);
+    }
+    if (this.mRotation.mFrames.length > 1) {
+      result.mRotation = this.mRotation.Sample(time, looping);
+    }
+    if (this.mScale.mFrames.length > 1) {
+      result.mScale = this.mScale.Sample(time, looping);
+    }
+
+    return result;
+  }
+} // end TransformTrack class
+
+
