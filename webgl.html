@@ -59,6 +59,7 @@
 <script src="./Texture.js"></script>
 <script src="./Mesh.js"></script>
 <script src="./JSONMesh.js"></script>
+<script src="./GLTFMesh.js"></script>
 <script src="./SkyMap.js"></script>
 <script src="./FPSCamera.js"></script>
 <script src="./OrbitCamera.js"></script>
@@ -74,6 +75,7 @@ var camera = null;
 var posLight = null;
 
 var testJsMesh = null;
+var testGltfMesh = null;
 var identMat = null;
 var testTexture = null;
 var testSkyMap = null;
@@ -105,10 +107,11 @@ function drawTestMesh() {
         identMat
     );
     posLight.SetUniforms(shader);
-    testTexture.Use();
-    testTexture.SetUniforms(shader);
+    //testTexture.Use();
+    //testTexture.SetUniforms(shader);
 
-    render.DrawMesh(testJsMesh);
+    //render.DrawMesh(testJsMesh);
+    render.DrawMesh(testGltfMesh);
 }
 
 function mainLoop() {
@@ -143,8 +146,8 @@ function main() {
 
     shader.Use();
 
-    camera = new FPSCamera();
-    //camera = new OrbitCamera();
+    //camera = new FPSCamera();
+    camera = new OrbitCamera();
     //camera.Update(1.0/60.0);
 
     identMat = mat4.create();
@@ -172,10 +175,11 @@ function main() {
 
     // wait until server assets loaded before starting render loop
     //getJSON("./models/Cube.json", assetsLoaded);
-    getJSON("./models/Monkey.json", assetsLoaded);
+    //getJSON("./models/Monkey.json", monkeyLoaded);
+    getJSON("./models/Woman.gltf", gltfLoaded);
 }
 
-function assetsLoaded(err, data) {
+function monkeyLoaded(err, data) {
     if (err != null) {
         console.log(err);
         Debug.Error("Failed to load asset:" + err);
@@ -184,7 +188,17 @@ function assetsLoaded(err, data) {
     testJsMesh = new JSONMesh(render.gl, data);
     testJsMesh.material.SetUniforms(shader);
 
-    // start rendering now
+    getJSON("./models/Woman.gltf", gltfLoaded);
+}
+function gltfLoaded(err, data) {
+    if (err != null) {
+        console.log(err);
+        Debug.Error("Failed to load gltf: " + err);
+        return;
+    }
+    testGltfMesh = new GLTFMesh(render.gl, data, 0.5);
+
+    // start rendering
     mainLoop();
 }
 
@@ -234,7 +248,7 @@ uniform vec3 uLightPosition;
 out vec3 vNormal;
 out vec3 vLightRay;
 out vec3 vEyeVec;
-out vec2 vTexCoord;
+//out vec2 vTexCoord;
 
 void calcLighting() {
 
@@ -256,7 +270,7 @@ void main() {
 
     calcLighting();
 
-    vTexCoord = aTexCoord;
+    //vTexCoord = aTexCoord;
     gl_Position = uPerspectiveMatrix *
                   uViewMatrix *
                   uModelMatrix *
@@ -276,7 +290,7 @@ uniform vec3 uMaterialDiffuse;
 uniform vec3 uMaterialSpecular;
 uniform float uMaterialShininess;
 
-uniform sampler2D uTexture;
+//uniform sampler2D uTexture;
 
 in vec3 vNormal;
 in vec3 vLightRay;
@@ -298,7 +312,7 @@ vec4 calcBlinnPhong() {
     if (lambertTerm > 0.0)
     {
         Id = uLightDiffuse *
-             texture(uTexture, vTexCoord).xyz *
+             /*texture(uTexture, vTexCoord).xyz **/
              uMaterialDiffuse *
              lambertTerm;
         vec3 E = normalize(vEyeVec);

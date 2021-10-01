@@ -79,6 +79,7 @@ class Renderer {
             );
         }
         else {
+            //Debug.Log('mesh num vertices: ' + mesh.numVertices);
             this.gl.drawArrays(
                 mesh.drawMode,
                 0,
