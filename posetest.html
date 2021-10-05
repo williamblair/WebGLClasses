@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Track Test</title>
+
+  
+  <script src="./gl-matrix-min.js"></script>
+  
+  <script src="./Transform.js"></script>
+  <script src="./Bezier.js"></script>
+  <script src="./Interpolation.js"></script>
+  <script src="./Frame.js"></script>
+  <script src="./Track.js"></script>
+  <script src="./Pose.js"></script>
+</head>
+<body>
+<canvas id="mycanvas" width="640" height="480"></canvas>
+
+<script>
+var canvas = document.getElementById("mycanvas");
+var ctx = canvas.getContext("2d");
+
+function DrawPoint(x, y, color, pointSize) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, pointSize, pointSize);
+}
+function DrawLine(x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color;
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+/**
+  @brief linear interpolate floats a and b based on t
+  @return interpolated float
+*/
+function LerpFloat(a, b, t) {
+  return a + (b-a)*t;
+}
+
+var scalarTracks = [];
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 10.0, 0.0], // value; x/y = start pixel position
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.0 // time
+      ),
+      new Vec3Frame(
+        [300.0, 20.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        1.0 // time
+      )
+    ], 
+    Interpolation.Linear
+  ),
+  "looping": true
+});
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 30.0, 0.0], // value; x/y = start pixel position
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.0 // time
+      ),
+      new Vec3Frame(
+        [300.0, 40.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.5 // time
+      )
+    ],
+    Interpolation.Linear
+  ),
+  "looping": true
+});
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 50.0, 0.0], // value; x/y = start pixel position
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.25 // time
+      ),
+      new Vec3Frame(
+        [300.0, 60.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.5 // time
+      ),
+      new Vec3Frame(
+        [300.0, 50.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.75 // time
+      ),
+    ],
+    Interpolation.Linear
+  ),
+  "looping": true
+});
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 70.0, 0.0], // value; x/y = start pixel position
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.25 // time
+      ),
+      new Vec3Frame(
+        [300.0, 80.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.5 // time
+      ),
+      new Vec3Frame(
+        [300.0, 70.0, 0.0], // value
+        [0.0, 0.0, 0.0], // in
+        [0.0, 0.0, 0.0], // out
+        0.75 // time
+      ),
+    ],
+    Interpolation.Linear
+  ),
+  "looping": false
+});
+
+var stepTrackLooping = new Vec3Track();
+stepTrackLooping.Resize(11);
+stepTrackLooping.mInterpolation = Interpolation.Constant;
+for (var i = 0; i < 11; ++i) {
+  var time = i / 10.0 * 0.5 + 0.25;
+  stepTrackLooping.mFrames[i] = new Vec3Frame(
+    [10.0, (i%2 == 0) ? 90.0 : 100.0, 0.0], // value
+    [0.0, 0.0, 0.0], // in
+    [0.0, 0.0, 0.0], // out
+    time
+  );
+}
+scalarTracks.push({
+  "track": stepTrackLooping,
+  "looping": true
+});
+var stepTrackNonloop = new Vec3Track();
+stepTrackNonloop.Resize(11);
+stepTrackNonloop.mInterpolation = Interpolation.Constant;
+for (var i = 0; i < 11; ++i) {
+  var time = i / 10.0 * 0.5 + 0.25;
+  stepTrackNonloop.mFrames[i] = new Vec3Frame(
+    [10.0, (i%2 == 0) ? 110.0 : 120.0, 0.0], // value
+    [0.0, 0.0, 0.0], // in
+    [0.0, 0.0, 0.0], // out
+    time
+  );
+}
+scalarTracks.push({
+  "track": stepTrackNonloop,
+  "looping": false
+});
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 130.0, 0.0], // value
+        [0.0, 130.0 + 0.676221*10.0, 0.0], // in
+        [0.0, 130.0 + 0.676221*10.0, 0.0], // out
+        0.25 // time
+      ),
+      new Vec3Frame(
+        [10.0, 140.0, 0.0], // value
+        [0.0, 130.0 + 4.043837*10.0, 0.0], // in
+        [0.0, 130.0 + 4.043837*10.0, 0.0], // out
+        0.75 // time
+      )
+    ],
+    Interpolation.Cubic
+  ),
+  "looping": false
+});
+scalarTracks.push({
+  "track": new Vec3Track(
+    [
+      new Vec3Frame(
+        [10.0, 150.0 + 0.0, 0.0], // value
+        [0.0, 150.0 + 0.0, 0.0], // in
+        [0.0, 150.0 + 0.0, 0.0], // out
+        0.25
+      ),
+      new Vec3Frame(
+        [0.0, 150.0 + 10.0, 0.0], // value
+        [0.0, 150.0 + 0.0, 0.0], // in
+        [0.0, 150.0 + 0.0, 0.0], // out
+        0.5
+      ),
+      new Vec3Frame(
+        [300.0, 150.0 + 0.0, 0.0], // value
+        [0.0, 150.0 + 0.0, 0.0], // in
+        [0.0, 150.0 + 0.0, 0.0], // out
+        0.75
+      )
+    ],
+    Interpolation.Cubic
+  ),
+  "looping": true
+});
+
+for (var i = 0; i < scalarTracks.length; ++i) {
+for (var j = 1; j < 150; ++j) {
+    var thisJNorm = (j-1) / 149.0;
+    var nextJNorm = j / 149.0;
+
+    var thisX = 10 + thisJNorm * 300;
+    var nextX = 10 + nextJNorm * 300;
+
+    var thisSample = scalarTracks[i].track.Sample(thisJNorm, scalarTracks[i].looping);
+    var nextSample = scalarTracks[i].track.Sample(nextJNorm, scalarTracks[i].looping);
+    DrawLine(
+      thisX,
+      thisSample[1],
+      nextX,
+      nextSample[1],
+      "#FF0000"
+    );
+}
+}
+
+//DrawLine(10, 10, 100, 100, "#FF0000");
+//DrawLine(10, 50, 50, 30, "#00FF00");
+
+</script>
+
+</body>
+</html>
+
