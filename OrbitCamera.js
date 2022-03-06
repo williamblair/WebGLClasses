@@ -5,7 +5,7 @@ class OrbitCamera {
         mat4.identity(this.viewMatrix);
 
         this.radius = 5.0;
-        this.position = vec3.fromValues(1.0, 0.0, 0.0);
+        this.position = vec3.fromValues(0.0, 0.0, 5.0);
         this.yaw = 0.0;
         this.pitch = 0.0;
 

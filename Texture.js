@@ -9,7 +9,12 @@ class Texture {
     */
     constructor(gl, imageID, flipY) {
         this.gl = gl;
-        flipY = flipY || true;
+        //flipY = flipY || true;
+        if (flipY !== false)
+        {
+            flipY = true;
+        }
+        
 
         /* Init a new texture in WebGL */
         this.texture = gl.createTexture();

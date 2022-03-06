@@ -18,7 +18,8 @@ class Mesh {
         gl, 
         vertices, 
         elementsPerVertex,
-        indices
+        indices,
+        staticDynamicDraw
     )
     {
         this.gl = gl;
@@ -37,19 +38,23 @@ class Mesh {
             this.numIndices = 0;
         }
 
-        this.createVAO(vertices, elementsPerVertex, indices);
+        this.createVAO(vertices, elementsPerVertex, indices, staticDynamicDraw);
     }
 
-    createVAO(vertices, elementsPerVertex, indices) {
+    createVAO(vertices, elementsPerVertex, indices, staticDynamicDraw) {
         this.vao = this.gl.createVertexArray();
         this.gl.bindVertexArray(this.vao);
+
+        if (staticDynamicDraw !== this.gl.DYNAMIC_DRAW) {
+            staticDynamicDraw = this.gl.STATIC_DRAW;
+        }
 
         this.vbo = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vbo);
         this.gl.bufferData(
             this.gl.ARRAY_BUFFER,
             new Float32Array(vertices),
-            this.gl.STATIC_DRAW
+            staticDynamicDraw
         ); // TODO - not hardcode STATIC_DRAW
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vbo);
@@ -59,7 +64,7 @@ class Mesh {
             this.gl.bufferData(
                 this.gl.ELEMENT_ARRAY_BUFFER,
                 new Uint32Array(indices),
-                this.gl.STATIC_DRAW // TODO - not hardcode
+                this.gl.STATIC_DRAW
             );
         }
         else {
@@ -108,6 +113,15 @@ class Mesh {
         if (this.numIndices > 0) {
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
         }
+    }
+    
+    updateVertices(vertsFloat32) {
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vbo);
+        this.gl.bufferSubData(
+            this.gl.ARRAY_BUFFER,
+            0,
+            vertsFloat32
+        );
     }
 }
 

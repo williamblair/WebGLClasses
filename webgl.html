@@ -39,6 +39,7 @@
 </div>
 
 <img id="MonkeyDiffuse" src="./models/MonkeyDiffuse.jpg" style="display:none;"/>
+<img id="ZombieDiffuse" src="./models/ZombieDiffuse.png" style="display:none;"/>
 
 <img id="cube01Right" src="./images/grimmnight_right.png" style="display:none;"/>
 <img id="cube01Left" src="./images/grimmnight_left.png" style="display:none;"/>
@@ -64,6 +65,10 @@
 <script src="./FPSCamera.js"></script>
 <script src="./OrbitCamera.js"></script>
 <script src="./PositionLight.js"></script>
+<script src="./IqmMesh.js"></script>
+
+<!-- data array -->
+<script src="./models/zombie.iqm.js"></script>
 
 <script>
 // global vars
@@ -79,6 +84,62 @@ var testGltfMesh = null;
 var identMat = null;
 var testTexture = null;
 var testSkyMap = null;
+
+class Zombie {
+    constructor(gl, dataArr) {
+        this.iqmMesh = new IqmMesh(gl, dataArr);
+        this.animTimer = 0.0;
+        
+        this.position = vec3.fromValues(0.0, 0.0, 0.0);
+        this.scale = vec3.fromValues(0.25, 0.25, 0.25);        
+        this.pitch = -90.0;
+        this.yaw = 180.0;
+        
+        this.modelMat = mat4.create();
+        this.UpdateModelMat();
+    }
+    
+    Update(dt) {
+        // 30 fps
+        this.animTimer += dt * 30.0;
+        while (this.animTimer >= this.iqmMesh.numFrames) {
+            this.animTimer -= this.iqmMesh.numFrames;
+        }
+        this.iqmMesh.Animate(this.animTimer);
+    }
+    
+    UpdateModelMat() {
+        mat4.identity(this.modelMat);
+        // scale
+        mat4.scale(
+            this.modelMat,
+            this.modelMat,
+            this.scale
+        );
+        // yaw rotation
+        mat4.rotate(
+            this.modelMat,
+            this.modelMat,
+            this.yaw * Math.PI / 180.0,
+            vec3.fromValues(0.0, 1.0, 0.0)
+        );
+        // pitch rotation
+        mat4.rotate(
+            this.modelMat,
+            this.modelMat,
+            this.pitch * Math.PI / 180.0,
+            vec3.fromValues(1.0, 0.0, 0.0)
+        );
+        // translation
+        mat4.translate(
+            this.modelMat,
+            this.modelMat,
+            this.position
+        );
+    }
+};
+var zombie = null;
+
 
 function drawSkyMap() {
     skyMapShader.Use();
@@ -104,19 +165,23 @@ function drawTestMesh() {
     );
     shader.SetMatrixUniform(
         Shader.MODEL_MAT_UNIFORM,
-        identMat
+        /*identMat*/zombie.modelMat
     );
     posLight.SetUniforms(shader);
-    //testTexture.Use();
-    //testTexture.SetUniforms(shader);
+    testTexture.Use();
+    testTexture.SetUniforms(shader);
+    
+    zombie.iqmMesh.material.SetUniforms(shader);
 
     //render.DrawMesh(testJsMesh);
-    render.DrawMesh(testGltfMesh);
+    //render.DrawMesh(testGltfMesh);
+    render.DrawMesh(zombie.iqmMesh);
 }
 
 function mainLoop() {
 
     camera.Update(timer.dt / 1000.0);
+    zombie.Update(timer.dt / 1000.0);
     timer.Update();
 
     render.BeginFrame();
@@ -161,7 +226,8 @@ function main() {
         [1.0, 1.0, 1.0] // specular
     );
 
-    testTexture = new Texture(render.gl, "MonkeyDiffuse");
+    //testTexture = new Texture(render.gl, "MonkeyDiffuse");
+    testTexture = new Texture(render.gl, "ZombieDiffuse", false);
 
     testSkyMap = new SkyMap(
         render.gl,
@@ -172,11 +238,54 @@ function main() {
         "cube01Back",
         "cube01Front"
     );
+    
+    // gl matrix 2.2.0 doesn't have these functions
+    mat4.multiplyScalar = function(res, mat, s) {
+        res[0] = mat[0] * s;
+        res[1] = mat[1] * s;
+        res[2] = mat[2] * s;
+        res[3] = mat[3] * s;
+        res[4] = mat[4] * s;
+        res[5] = mat[5] * s;
+        res[6] = mat[6] * s;
+        res[7] = mat[7] * s;
+        res[8] = mat[8] * s;
+        res[9] = mat[9] * s;
+        res[10] = mat[10] * s;
+        res[11] = mat[11] * s;
+        res[12] = mat[12] * s;
+        res[13] = mat[13] * s;
+        res[14] = mat[14] * s;
+        res[15] = mat[15] * s;
+    }
+    mat4.add = function(res, mat1, mat2) {
+        res[0] = mat1[0] + mat2[0];
+        res[1] = mat1[1] + mat2[1];
+        res[2] = mat1[2] + mat2[2];
+        res[3] = mat1[3] + mat2[3];
+        res[4] = mat1[4] + mat2[4];
+        res[5] = mat1[5] + mat2[5];
+        res[6] = mat1[6] + mat2[6];
+        res[7] = mat1[7] + mat2[7];
+        res[8] = mat1[8] + mat2[8];
+        res[9] = mat1[9] + mat2[9];
+        res[10] = mat1[10] + mat2[10];
+        res[11] = mat1[11] + mat2[11];
+        res[12] = mat1[12] + mat2[12];
+        res[13] = mat1[13] + mat2[13];
+        res[14] = mat1[14] + mat2[14];
+        res[15] = mat1[15] + mat2[15];
+    }
+    //zombieIqmMesh = new IqmMesh(render.gl, zombie_iqm);
+    //zombieIqmMesh.Animate(0.0);
+    zombie = new Zombie(render.gl, zombie_iqm);
+    zombie.Update(0.0);
 
     // wait until server assets loaded before starting render loop
     //getJSON("./models/Cube.json", assetsLoaded);
     //getJSON("./models/Monkey.json", monkeyLoaded);
-    getJSON("./models/Woman.gltf", gltfLoaded);
+    //getJSON("./models/Woman.gltf", gltfLoaded);
+    mainLoop();
 }
 
 function monkeyLoaded(err, data) {
@@ -248,7 +357,7 @@ uniform vec3 uLightPosition;
 out vec3 vNormal;
 out vec3 vLightRay;
 out vec3 vEyeVec;
-//out vec2 vTexCoord;
+out vec2 vTexCoord;
 
 void calcLighting() {
 
@@ -270,7 +379,7 @@ void main() {
 
     calcLighting();
 
-    //vTexCoord = aTexCoord;
+    vTexCoord = aTexCoord;
     gl_Position = uPerspectiveMatrix *
                   uViewMatrix *
                   uModelMatrix *
@@ -290,7 +399,7 @@ uniform vec3 uMaterialDiffuse;
 uniform vec3 uMaterialSpecular;
 uniform float uMaterialShininess;
 
-//uniform sampler2D uTexture;
+uniform sampler2D uTexture;
 
 in vec3 vNormal;
 in vec3 vLightRay;
@@ -312,7 +421,7 @@ vec4 calcBlinnPhong() {
     if (lambertTerm > 0.0)
     {
         Id = uLightDiffuse *
-             /*texture(uTexture, vTexCoord).xyz **/
+             texture(uTexture, vTexCoord).xyz *
              uMaterialDiffuse *
              lambertTerm;
         vec3 E = normalize(vEyeVec);
